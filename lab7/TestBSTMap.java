@@ -67,6 +67,7 @@ public class TestBSTMap {
         for (int i = 0; i < 455; i++)
             b.put("hi" + i, 1);
         assertEquals(456, b.size());
+
     }
 
     //assumes get/containskey work
@@ -77,7 +78,28 @@ public class TestBSTMap {
         assertTrue(b.containsKey("hi") && b.get("hi") != null);
     }
 
+    @Test
+    public void testPrintInOrder() {
+	    BSTMap<Integer, String> b = new BSTMap<Integer, String>();
+	    for (int i = 0; i < 20; i++) {
+	        b.put(i, "testValue");
+        }
+	    b.put(200, "test");
+	    b.put(54, "test");
+	    b.put(-2, "test");
+	    b.put(-55, "test");
+
+	    b.printInOrder();
+
+    }
+
+
+
     public static void main(String[] args) {
         jh61b.junit.TestRunner.runTests(TestBSTMap.class);
     }
+
+
+
+
 }

@@ -1,0 +1,28 @@
+InsertRandomSpeedTest.java
+
+
+Length for each string  : 10
+Number of strings = 25000
+RESULTS
+>>> BSTMap 0.02 sec
+>>> ULLMap 1.71 sec
+>>> TreeMap 0.02 sec
+
+
+
+InsertInOrderSpeedTest.java
+Number of strings 5000
+RESULTS
+>>> BSTMap 0.18 sec
+>>> ULLMap 0.19 sec
+>>> TreeMap 0.01 sec
+>>> HashMap 0.01 sec
+
+
+InsertInOrderSpeedTest.java
+Number of strings 15000
+RESULTS
+>>> BSTMap 1.48 sec
+>>> ULLMap 1.73 sec
+>>> TreeMap 0.02 sec
+>>> HashMap 0.01 sec
