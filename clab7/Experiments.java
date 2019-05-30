@@ -36,6 +36,11 @@ public class Experiments {
     }
 
     public static void experiment2() {
+        List<Integer> xValues = new ArrayList<>();
+        List<Double> yValues = new ArrayList<>();
+
+
+
     }
 
     public static void experiment3() {
