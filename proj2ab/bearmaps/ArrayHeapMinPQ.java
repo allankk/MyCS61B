@@ -1,20 +1,25 @@
 package bearmaps;
 
+import java.lang.reflect.Array;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.NoSuchElementException;
 
 public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     private PriorityNode[] items;
     public int size;
+    private Map<T, Integer> keys;
 
 
     public ArrayHeapMinPQ(int initCapacity) {
-        items = (PriorityNode[]) new Object[initCapacity + 1];
+        items = new ArrayHeapMinPQ.PriorityNode[initCapacity + 1];
         size = 0;
+        keys = new HashMap<>();
     }
 
     public ArrayHeapMinPQ() {
-        this(1);
+        this(5);
     }
 
     public boolean isEmpty() {
@@ -23,21 +28,32 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     @Override
     public void add(T item, double priority) {
+
+        if (keys.containsKey(item)) throw new IllegalArgumentException();
+
         PriorityNode newItem = new PriorityNode(item, priority);
 
+        items[++size] = newItem;
+        keys.put(item, size);
+        swim(size);
+        resize();
     }
 
     private void resize() {
-        if (items.length / size > 0.75) {
-            PriorityNode[] temp = (PriorityNode[]) new Object[items.length * 2];
+        double division = (double) size / items.length;
+
+        if (division > 0.75) {
+            PriorityNode[] temp = new ArrayHeapMinPQ.PriorityNode[items.length * 2];
             for (int i = 1; i <= size; i++) {
                 temp[i] = items[i];
             }
 
             items = temp;
 
-        } else if (items.length / size < 0.4) {
-            PriorityNode[] temp = (PriorityNode[]) new Object[items.length / 2];
+        } else if (division < 0.3) {
+            if (items.length < 8) return;
+
+            PriorityNode[] temp = new ArrayHeapMinPQ.PriorityNode[(int) (items.length / 1.5)];
             for (int i = 1; i <= size; i++) {
                 temp[i] = items[i];
             }
@@ -49,7 +65,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
     // Helpers to restore heap by priority
     private void swim(int k) {
         int parentNodeIndex = k/2;
-        while (k > 1 && items[k].compareTo(items[parentNodeIndex]) > 0) {
+        while (k > 1 && items[k].compareTo(items[parentNodeIndex]) < 0) {
             swap(k, parentNodeIndex);
             swim(parentNodeIndex);
         }
@@ -69,6 +85,8 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     private void swap(int i, int j) {
         PriorityNode temp = items[i];
+        keys.put(items[i].getItem(), j);
+        keys.put(items[j].getItem(), i);
         items[i] = items[j];
         items[j] = temp;
     }
@@ -76,7 +94,7 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     @Override
     public boolean contains(T item) {
-        return false;
+        return keys.containsKey(item);
     }
 
     @Override
@@ -87,17 +105,28 @@ public class ArrayHeapMinPQ<T> implements ExtrinsicMinPQ<T> {
 
     @Override
     public T removeSmallest() {
-        return null;
+        if (isEmpty()) throw new NoSuchElementException();
+        PriorityNode itemToReturn = items[1];
+        keys.remove(itemToReturn.getItem());
+        swap(1, size--);
+        sink(1);
+        items[size + 1] = null;
+        return itemToReturn.getItem();
     }
 
     @Override
     public int size() {
-        return 0;
+        return size;
     }
 
     @Override
     public void changePriority(T item, double priority) {
+        if (!keys.containsKey(item)) throw new NoSuchElementException();
 
+        int itemIndex = keys.get(item);
+        items[itemIndex].setPriority(priority);
+        swim(itemIndex);
+        sink(itemIndex);
     }
 
 
