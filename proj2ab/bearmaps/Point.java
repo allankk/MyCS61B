@@ -36,6 +36,10 @@ public class Point {
         return distance(p1.getX(), p2.getX(), p1.getY(), p2.getY());
     }
 
+    public double distance(Point p1) {
+        return distance(this.getX(), p1.getX(), this.getY(), p1.getY());
+    }
+
     @Override
     public boolean equals(Object other) {
         if (other == null) {
