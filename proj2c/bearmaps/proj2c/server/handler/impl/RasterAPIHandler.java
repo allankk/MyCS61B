@@ -12,13 +12,10 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
-import java.util.Base64;
-import java.util.HashMap;
+import java.util.*;
 import java.util.List;
-import java.util.Map;
 
-import static bearmaps.proj2c.utils.Constants.SEMANTIC_STREET_GRAPH;
-import static bearmaps.proj2c.utils.Constants.ROUTE_LIST;
+import static bearmaps.proj2c.utils.Constants.*;
 
 /**
  * Handles requests from the web browser for map images. These images
@@ -84,13 +81,153 @@ public class RasterAPIHandler extends APIRouteHandler<Map<String, Double>, Map<S
      */
     @Override
     public Map<String, Object> processRequest(Map<String, Double> requestParams, Response response) {
-        //System.out.println("yo, wanna know the parameters given by the web browser? They are:");
-        //System.out.println(requestParams);
-        Map<String, Object> results = new HashMap<>();
-        System.out.println("Since you haven't implemented RasterAPIHandler.processRequest, nothing is displayed in "
-                + "your browser.");
+        System.out.println(requestParams);
+        /* PARAMETERS
+        lrlon
+        ullon
+        w
+        h
+        ullat
+        lrlat
+
+        Ex. params = {ullon=-122.241632, lrlon=-122.24053, w=892.0, h=875.0, ullat=37.87655, lrlat=37.87548}
+         */
+        // ROOT_ULLON, ROOT_ULLAT, ROOT_LRLON, ROOT_LRLAT, TILE_SIZE
+        /*
+            public static final double ROOT_ULLAT = 37.892195547244356, ROOT_ULLON = -122.2998046875,
+            ROOT_LRLAT = 37.82280243352756, ROOT_LRLON = -122.2119140625;
+
+         */
+
+
+        // Initialize the variables from requested parameters
+        double lrlon = requestParams.get("lrlon");
+        double ullon = requestParams.get("ullon");
+        double w = requestParams.get("w");
+        double h = requestParams.get("h");
+        double ullat = requestParams.get("ullat");
+        double lrlat = requestParams.get("lrlat");
+
+        // CHECK IF QUERY IS VALID
+        if (ullon > ROOT_LRLON || lrlon < ROOT_ULLON) {
+            Map<String, Object> results = new HashMap<>();
+            System.out.println("hello");
+            results.put("query_success", false);
+            return results;
+        } else if (ullat > ROOT_ULLAT && lrlat < ROOT_LRLAT) {
+            Map<String, Object> results = new HashMap<>();
+            results.put("query_success", false);
+            System.out.println("hello2");
+            return results;
+        } else if (ullon > lrlon || ullat < lrlat) {
+            Map<String, Object> results = new HashMap<>();
+            System.out.println("hello3");
+            results.put("query_success", false);
+            return results;
+        }
+
+        // HOW WIDE IMAGE THE USER WANTS
+        int SL = 288200;
+        double imageWidthInFeet = (ullon - lrlon) * SL;
+        double imageFeetPerPixel = Math.abs(imageWidthInFeet / w);
+
+        // CALCULATE THE APPROPRIATE DEPTH
+        int depth = 7;
+        double LonDPP = SL * Math.abs(ROOT_ULLON-ROOT_LRLON) / TILE_SIZE;
+
+        for (int i = 0; i <= 7; i++) {
+            if (LonDPP <= imageFeetPerPixel) {
+                depth = i;
+                break;
+            } else {
+                LonDPP = LonDPP / 2;
+            }
+        }
+
+        // Total number of images and gridlines on an axis
+        int totalImages = (int) Math.pow(4, depth);
+        int totalXYGrid = (int) Math.pow(2, depth) - 1;
+
+        Map<String, Object> results = findGrid(ullon, ullat, lrlon, lrlat, totalXYGrid, depth, w, h);
+
+
         return results;
     }
+
+    // finds the appropriate start and end grid
+    private Map<String, Object> findGrid(double x1, double y1, double x2, double y2, int gridNumber, int depth, double w, double h) {
+        // one grid size.
+        double xGridLength = Math.abs(ROOT_ULLON - ROOT_LRLON) / (gridNumber + 1);
+        double yGridLength = Math.abs(ROOT_ULLAT - ROOT_LRLAT) / (gridNumber + 1);
+
+        // find the grid corner grids (doesn't account for negatives yet)
+        int startX = (int) ((x1 - ROOT_ULLON) / xGridLength);
+        int startY = (int) ((y1 - ROOT_ULLAT) / yGridLength);
+        int endX = (int) ((x2 - ROOT_ULLON) / xGridLength);
+        int endY = (int) ((y2 - ROOT_ULLAT) / yGridLength);
+
+        if ((ROOT_ULLON + (endX * xGridLength)) < ROOT_LRLON) {
+            endX = endX + 1;
+        }
+
+        /*System.out.println( "startY " + startY + " and endY " + endY);*/
+
+        // if the grids to be added are less than the width, add more grids
+        while ((endX - startX + 1) * TILE_SIZE < w) {
+            endX = endX + 1;
+        }
+        /*
+        while ((ROOT_ULLON + (endX * xGridLength)) > x2) {
+            endX = endX + 1;
+        }*/
+
+
+        // find the grid corner coordinates
+        double coordStartX = ROOT_ULLON + (startX * xGridLength);
+        double coordStartY = ROOT_ULLAT + (startY * yGridLength);
+        double coordEndX = ROOT_ULLON + (endX * xGridLength);
+        double coordEndY = ROOT_ULLAT - ((Math.abs(endY) + 1) * yGridLength);
+
+
+
+
+
+        Map<String, Object> results = new HashMap<>();
+        results.put("raster_ul_lon", coordStartX);
+        results.put("depth", depth);
+        results.put("raster_lr_lon", coordEndX);
+        results.put("raster_lr_lat", coordEndY);
+        /// render grid
+        String[][] renderedGrid = renderGrid(startX, Math.abs(startY), endX, Math.abs(endY), depth);
+        results.put("render_grid", renderedGrid);
+        results.put("raster_ul_lat", coordStartY);
+        results.put("query_success", true);
+
+
+        return results;
+    }
+
+
+    private String[][] renderGrid(int startX, int startY, int endX, int endY, int depth) {
+        int XGrids = endX - startX;
+        int YGrids = Math.abs(endY - startY) + 1;
+
+        String[][] renderedGrid = new String[YGrids][XGrids];
+
+        for (int i = 0; i < YGrids; i++) {
+            int X = startX;
+            String[] temp = new String[XGrids];
+            for (int j = 0; j < XGrids; j++) {
+                int Y = startY + i;
+                temp[j] = "d" + depth + "_x" + X + "_y" + Y + ".png";
+                X = X + 1;
+            }
+            renderedGrid[i] = temp;
+        }
+
+        return renderedGrid;
+    }
+
 
     @Override
     protected Object buildJsonResponse(Map<String, Object> result) {
