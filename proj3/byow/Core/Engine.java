@@ -37,7 +37,31 @@ public class Engine {
      * @param input the input string to feed to your program
      * @return the 2D TETile[][] representing the state of the world
      */
+    // @source Josh Hug, CS61B materials
     public TETile[][] interactWithInputString(String input) {
+        InputSource inputSource;
+        inputSource = new StringInputDevice(input);
+
+        int totalCharacters = 0;
+        String seed = "";
+
+
+        if (inputSource.possibleNextInput()) {
+            char c = inputSource.getNextKey();
+            if (c == 'n') {
+                c = inputSource.getNextKey();
+                while ((c != 's' || c!='S') && inputSource.possibleNextInput()) {
+                    seed = seed + c;
+                    c = inputSource.getNextKey();
+                }
+            }
+        }
+
+        long seedLong = Long.parseLong(seed);
+
+        GenWorld world = new GenWorld();
+        return world.generateAndReturnWorld(seedLong);
+
         // TODO: Fill out this method so that it run the engine using the input
         // passed in as an argument, and return a 2D tile representation of the
         // world that would have been drawn if the same inputs had been given
@@ -45,8 +69,5 @@ public class Engine {
         //
         // See proj3.byow.InputDemo for a demo of how you can make a nice clean interface
         // that works for many different input types.
-
-        TETile[][] finalWorldFrame = null;
-        return finalWorldFrame;
     }
 }
