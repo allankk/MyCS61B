@@ -24,7 +24,8 @@ public class Main {
 public class Main {
     public static void main(String[] args) {
         Engine engine = new Engine();
-        engine.interactWithInputString("n21312425");
-        System.out.println(engine.toString());
+        //engine.interactWithInputString("n22134123S");
+        //System.out.println(engine.toString());
+        engine.interactWithKeyboard();
     }
 }

@@ -14,6 +14,7 @@ public class GenWorld {
     private static final int HEIGHT = 40;
     private long SEED;
     private Random RANDOM;
+    private TETile[][] world;
 
 
     // Part of world initialization. Fills the world with empty tiles.
@@ -186,13 +187,13 @@ public class GenWorld {
 
 
     public void generateWorld(long seed) {
-        SEED = SEED;
+        SEED = seed;
         RANDOM = new Random(SEED);
         TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
+        ter.initialize(WIDTH, HEIGHT, 0 ,-2);
 
         GenWorld testWorld = new GenWorld();
-        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = new TETile[WIDTH][HEIGHT];
 
         fillWithEmptyTiles(world);
         List<Position> hallways = new ArrayList<>();
@@ -207,7 +208,7 @@ public class GenWorld {
         TERenderer ter = new TERenderer();
 
         GenWorld testWorld = new GenWorld();
-        TETile[][] world = new TETile[WIDTH][HEIGHT];
+        world = new TETile[WIDTH][HEIGHT];
 
         fillWithEmptyTiles(world);
         List<Position> hallways = new ArrayList<>();
@@ -216,6 +217,25 @@ public class GenWorld {
 
         return world;
     }
+
+    public void generateWorldWithoutRendering(long seed) {
+        SEED = seed;
+        RANDOM = new Random(SEED);
+        TERenderer ter = new TERenderer();
+
+        GenWorld testWorld = new GenWorld();
+        world = new TETile[WIDTH][HEIGHT];
+
+        fillWithEmptyTiles(world);
+        List<Position> hallways = new ArrayList<>();
+        generateRooms(world, hallways);
+        createRandomHallways(world, hallways);
+    }
+
+    public TETile[][] getWorld() {
+        return world;
+    }
+
 
 
 /*
