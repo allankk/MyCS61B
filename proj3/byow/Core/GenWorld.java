@@ -15,7 +15,8 @@ public class GenWorld {
     private long SEED;
     private Random RANDOM;
     private TETile[][] world;
-
+    private Position playerPos;
+    private TERenderer ter;
 
     // Part of world initialization. Fills the world with empty tiles.
     public void fillWithEmptyTiles(TETile[][] world) {
@@ -169,6 +170,63 @@ public class GenWorld {
         }
     }
 
+    /// PLAYER METHODS
+    public void initializePlayer(List<Position> hallways) {
+        // initializes a position in a random hallway.
+        Position randomPos = hallways.get(RandomUtils.uniform(RANDOM, 0, hallways.size()));
+
+        playerPos = new Position(randomPos.x, randomPos.y);
+        world[playerPos.x][playerPos.y] = Tileset.FLOWER;
+    }
+
+    public boolean moveUp() {
+        if (world[playerPos.x][playerPos.y + 1] == Tileset.FLOOR) {
+            world[playerPos.x][playerPos.y] = Tileset.FLOOR;
+            playerPos.y = playerPos.y + 1;
+            world[playerPos.x][playerPos.y] = Tileset.FLOWER;
+            return true;
+        } else {
+            System.out.println("Invalid move");
+            return false;
+        }
+    }
+
+    public boolean moveDown() {
+        if (world[playerPos.x][playerPos.y - 1] == Tileset.FLOOR) {
+            world[playerPos.x][playerPos.y] = Tileset.FLOOR;
+            playerPos.y = playerPos.y - 1;
+            world[playerPos.x][playerPos.y] = Tileset.FLOWER;
+            return true;
+        } else {
+            System.out.println("Invalid move");
+            return false;
+        }
+    }
+
+    public boolean moveLeft() {
+        if (world[playerPos.x - 1][playerPos.y] == Tileset.FLOOR) {
+            world[playerPos.x][playerPos.y] = Tileset.FLOOR;
+            playerPos.x = playerPos.x - 1;
+            world[playerPos.x][playerPos.y] = Tileset.FLOWER;
+            return true;
+        } else {
+            System.out.println("Invalid move");
+            return false;
+        }
+    }
+
+    public boolean moveRight() {
+        if (world[playerPos.x + 1][playerPos.y] == Tileset.FLOOR) {
+            world[playerPos.x][playerPos.y] = Tileset.FLOOR;
+            playerPos.x = playerPos.x + 1;
+            world[playerPos.x][playerPos.y] = Tileset.FLOWER;
+            return true;
+        } else {
+            System.out.println("Invalid move");
+            return false;
+        }
+    }
+
 
     public Position getRandomBoxPos(Position pos, int height, int width) {
         int x = RandomUtils.uniform(RANDOM, pos.x, pos.x + width+1);
@@ -189,8 +247,8 @@ public class GenWorld {
     public void generateWorld(long seed) {
         SEED = seed;
         RANDOM = new Random(SEED);
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT, 0 ,-2);
+        ter = new TERenderer();
+        ter.initialize(WIDTH, HEIGHT+2, 0 ,0);
 
         GenWorld testWorld = new GenWorld();
         world = new TETile[WIDTH][HEIGHT];
@@ -199,13 +257,14 @@ public class GenWorld {
         List<Position> hallways = new ArrayList<>();
         generateRooms(world, hallways);
         createRandomHallways(world, hallways);
+        initializePlayer(hallways);
         ter.renderFrame(world);
     }
 
     public TETile[][] generateAndReturnWorld(long seed) {
         SEED = SEED;
         RANDOM = new Random(SEED);
-        TERenderer ter = new TERenderer();
+        ter = new TERenderer();
 
         GenWorld testWorld = new GenWorld();
         world = new TETile[WIDTH][HEIGHT];
@@ -214,6 +273,7 @@ public class GenWorld {
         List<Position> hallways = new ArrayList<>();
         generateRooms(world, hallways);
         createRandomHallways(world, hallways);
+        initializePlayer(hallways);
 
         return world;
     }
@@ -221,7 +281,7 @@ public class GenWorld {
     public void generateWorldWithoutRendering(long seed) {
         SEED = seed;
         RANDOM = new Random(SEED);
-        TERenderer ter = new TERenderer();
+        ter = new TERenderer();
 
         GenWorld testWorld = new GenWorld();
         world = new TETile[WIDTH][HEIGHT];
@@ -230,24 +290,13 @@ public class GenWorld {
         List<Position> hallways = new ArrayList<>();
         generateRooms(world, hallways);
         createRandomHallways(world, hallways);
+        initializePlayer(hallways);
     }
 
     public TETile[][] getWorld() {
         return world;
     }
 
+    public void renderWorld() { ter.renderFrameWithoutShow(world);}
 
-
-/*
-    public static void main(String[] args) {
-        TERenderer ter = new TERenderer();
-        ter.initialize(WIDTH, HEIGHT);
-
-        GenWorld testWorld = new GenWorld();
-        TETile[][] world = new TETile[WIDTH][HEIGHT];
-
-        testWorld.generateWorld(world);
-
-        ter.renderFrame(world);
-    }*/
 }
